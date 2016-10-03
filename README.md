@@ -77,4 +77,82 @@ CLOSE order_cur;
 
 
 
+###Using the GROUP BY clause
+The GROUP BY clause enables you to establish data groups based on columns.  
+All columns that are used besides the aggregate functions must be included in the GROUP BY clause. The GROUP BY clause does not support the use of column aliases; you must use the actual column names. The GROUP BY columns may or may not appear in the SELECT list. The GROUP BY clause can only be used with aggregate functions such as  SUM , AVG , COUNT , MAX , and MIN .  
 
+Ex
+```
+SELECT product, SUM(sale) AS "Total sales" FROM order_details GROUP BY product;
+```
+In the select statement, we have sales where we applied the SUM function and the other field product is not part of SUM, we must use in the GROUP BY clause.
+
+
+
+####Using the HAVING clause
+The WHERE clause cannot be used to return the desired groups. The WHERE clause is only used to restrict individual rows. When the GROUP BY clause is not used, the HAVING clause works like the WHERE clause.  
+Ex:
+```
+SELECT product, SUM(sale) AS "Total sales" FROM order_details GROUP BY product Having sum(sales)>10000;
+```
+
+
+
+####Using the UPDATE operation clauses
+```
+update tbname set k=v where..
+```
+
+####Using subqueries
+The query inside the brackets is called the inner query. The query that contains the subquery is called the outer query.  
+PostgreSQL executes the query that contains a subquery in the following sequence:
+- First, it executes the subquery
+- Second, it gets the results and passes it to the outer query
+- Third, it executes the outer query  
+
+Ex
+```
+SELECT employee_id,first_name,last_name,salary FROM employee WHERE salary > 25000;
+SELECT avg(salary) from employee;
+```
+same as
+```
+SELECT employee_id,first_name,last_name,salary FROM employee WHERE salary > (Select avg(salary) from employee);
+```
+
+
+
+
+
+###Subqueries that return multiple rows
+[techonthenet subquery explained](https://www.techonthenet.com/postgresql/subqueries.php)
+Subqueries that return multiple rows can be used with the ALL, IN, ANY, or SOME operators. We can also negate the condition like NOT IN.   
+
+Ex:
+```
+SELECT last_name, salary, department_id FROM employee outer
+WHERE salary > (SELECT AVG(salary) FROM employee WHERE department_id = outer.department_id);
+```
+in this query, outer is alias of employee table
+
+####Existence subqueries
+The PostgreSQL EXISTS condition is used in combination with a subquery, and is considered to be met if the subquery returns at least one row. It can be used in a SELECT, INSERT, UPDATE, or DELETE statement. If a subquery returns any rows at all, the EXISTS subquery is true, and the NOT EXISTS subquery is false.
+
+
+
+
+
+###Using the Union join
+[doc](https://www.postgresql.org/docs/devel/static/queries-union.html)  
+By default, the UNION join behaves like DISTINCT, that is, eliminates the duplicate rows; however, using the ALL keyword with the UNION join returns all rows, including the duplicates. The queries are all executed independently, but their output is merged. To sort the records in a combined result set, you can use ORDER BY.
+
+
+
+
+###Using the Self join
+```
+SELECT a.emp_id AS "Emp_ID", a.emp_name AS "Employee Name",
+b.emp_id AS "Supervisor ID",b.emp_name AS "Supervisor Name"
+FROM employee a, employee b  -- using different aliases
+WHERE a.supervisor_id = b.emp_id;
+```
