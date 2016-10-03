@@ -156,3 +156,103 @@ b.emp_id AS "Supervisor ID",b.emp_name AS "Supervisor Name"
 FROM employee a, employee b  -- using different aliases
 WHERE a.supervisor_id = b.emp_id;
 ```
+
+
+
+###Using the Outer join
+Three types of Outer joins:
+- The PostgreSQL LEFT OUTER JOIN (or sometimes called LEFT JOIN)
+- The PostgreSQL RIGHT OUTER JOIN (or sometimes called RIGHT JOIN)
+- The PostgreSQL FULL OUTER JOIN (or sometimes called FULL JOIN)  
+
+
+
+
+
+
+
+##Chapter 2. Data Manipulation
+###Conversion between datatypes
+syntax
+```
+CAST ( expression AS type ) 
+```
+Or
+```
+expression :: type 
+```
+pg_cast stores datatype conversion paths that are built-in and the one that is being defined with the help of CREATE CAST:
+```
+SELECT castsource::regtype, casttarget::regtype FROM pg_cast limit 2; 
+```
+
+
+###Introduction to arrays
+PostgreSQL supports columns to defined as an  array. This array is of a variable length and can be defined as a one-dimensional or multidimensional array.
+
+
+####Array constructors
+int array:
+```
+SELECT ARRAY[1,2,3] AS sample_array;   --- same as
+SELECT ARRAY[1,2,3.2] :: integer[] AS sample_array; 
+```
+
+text array with insertion
+```
+CREATE TABLE supplier (name text, product  text[])
+INSERT INTO supplier VALUES ('Supplier1','{ "table","chair" }' )
+INSERT INTO supplier VALUES (' Supplier2 ', ARRAY['pen','page '] )
+```
+
+using array function convert records to array
+```
+SELECT array(SELECT distinct product_name FROM supplier WHERE name='Supplier1') AS product_name; 
+```
+
+more functions
+#####String_to_array() , array_to_string()
+```
+SELECT string_to_array ('sample string to be converted',' ');
+SELECT array_to_string (ARRAY[1, 2, 3], ',');
+```
+
+
+#####Array_dims( )
+tbc
+
+#####ARRAY_AGG()
+The ARRAY_AGG function is used to concatenate values including null into an array.  
+Ex
+```
+SELECT name FROM supplier;
+```
+name 
+----|-- 
+ 
+Supplier1 
+Supplier2 
+```
+SELECT ARRAY_AGG(NAME) FROM supplier;
+```
+Output:  
+array_agg  
+---------------------------------------------   
+ {Supplier2,Supplier1,NULL}  
+ 
+ 
+ We can use the array_to_string function as well in order to ignore NULL:
+```
+SELECT array_to_string(array_agg(name), ',') FROM supplier; 
+//In version 9.x, we can use COALESCE in order to handle a null or an empty array:
+SELECT array_to_string(array_agg(coalesce(name, '')), ',') FROM supplier; 
+```
+
+#####ARRAY_UPPER() ARRAY_UPPER()
+Returns the upper bound of the array dimension. 
+
+#####Array_length()
+```
+SELECT array_length(product,1) FROM supplier WHERE name='Supplier1'; 
+```
+
