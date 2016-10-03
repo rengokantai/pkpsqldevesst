@@ -227,11 +227,11 @@ Ex
 ```
 SELECT name FROM supplier;
 ```
-name 
-----|-- 
+name  
+----|--  
  
-Supplier1 
-Supplier2 
+Supplier1  
+Supplier2  
 ```
 SELECT ARRAY_AGG(NAME) FROM supplier;
 ```
@@ -255,4 +255,11 @@ Returns the upper bound of the array dimension.
 ```
 SELECT array_length(product,1) FROM supplier WHERE name='Supplier1'; 
 ```
+
+
+####Array slicing and splicing
+
+
+
+####UNNESTing arrays to rows
 
