@@ -263,3 +263,62 @@ SELECT array_length(product,1) FROM supplier WHERE name='Supplier1';
 
 ####UNNESTing arrays to rows
 
+##Chapter 9. PostgreSQL Extensions and Large Object Support
+[schema in psql](http://www.estelnetcomputing.com/index.php?/archives/10-Database-vs.-Schema-Definition-in-Mysql-vs.-Postgres.html)
+In mysql a database is a schema. The two words can be used interchangeably in most commands. For instance, you could say create database dbname, or create schema dbname and achieve the same result.
+Postgres has a different concept of schema. It is a namespace that contains tables, functions, operators and data types. It is essentially a layer between the database and the tables. In postgres, a database may contain many schemas and those schemas may contain the same tables or different ones. The "public" schema is the default schema in a database. 
+###Creating an extension
+```
+CREATE EXTENSION pg_stat_statements;
+```
+check
+```
+\df pg_stat_statement*
+\dv pg_stat_statement*
+```
+if we do not provide any schema as an owner while creating an extension, it creates an extension in the schema public
+```
+DROP EXTENSION IF EXISTS pg_stat_statements;
+CREATE EXTENSION pg_stat_statements WITH SCHEMA owner;
+```
+change back
+```
+ALTER EXTENSION pg_stat_statements SET SCHEMA public;
+```
+
+####Compiling extensions
+```
+SELECT * FROM pg_available_extensions limit 1;
+```
+We cannot create an extension that is not already compiled.
+Ex, postgis, we need to download and compile first. Then config
+```
+./configure --with-pgconfig=/path/to/your/pg_config
+```
+create extension
+```
+SELECT * FROM pg_available_extensions WHERE name='postgis';
+CREATE EXTENSION postgis;
+```
+
+
+####Database links in PostgreSQL
+```
+CREATE SCHEMA for_dblink;
+CREATE EXTENSION dblink WITH SCHEMA for_dblink;
+\df for_dblink.dblink*
+```
+(tbc)
+
+###Using binary large objects
+####Server-side functions
+lo_import, lo_export,
+```
+CREATE TABLE image_load(name text, image oid);
+INSERT INTO image_load VALUES('my_image', lo_import('/tmp/pic.png'));
+```
+You can specify an OID while importing:
+```
+INSERT INTO image_load VALUES('my_image',  lo_import('/tmp/pic.png',123456));
+select lo_export(image_load.image, '/tmp/pic.png') from  image_load ;
+```
