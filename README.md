@@ -263,6 +263,35 @@ SELECT array_length(product,1) FROM supplier WHERE name='Supplier1';
 
 ####UNNESTing arrays to rows
 
+
+
+
+
+
+
+
+
+
+##Chapter 7.  Table Partitioning
+###Table partitioning
+
+
+####Partition implementation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ##Chapter 9. PostgreSQL Extensions and Large Object Support
 [schema in psql](http://www.estelnetcomputing.com/index.php?/archives/10-Database-vs.-Schema-Definition-in-Mysql-vs.-Postgres.html)
 In mysql a database is a schema. The two words can be used interchangeably in most commands. For instance, you could say create database dbname, or create schema dbname and achieve the same result.
