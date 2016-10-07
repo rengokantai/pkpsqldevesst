@@ -315,6 +315,83 @@ These are the insertion, update, and deletion anomalies.
 ####ACID rules
 
 
+####Explicit locking
+Locks for rows or tables are only allowed inside the transaction. Once the transaction gets completed with a commit or rollback, all the locks acquired during the transaction will be released automatically.
+
+
+#####Locking tables
+
+
+```
+LOCK TABLE table-name 
+```
+same as
+```
+LOCK TABLE table-name ACCESS EXCLUSIVE MODE 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+##Chapter 6. Indexes and Constraints
+###Introduction to indexes and constraints
+####Primary key indexes
+add pk
+```
+CREATE TABLE emp(
+ empid integer,
+ empname varchar,
+ sal numeric);
+ALTER TABLE emp ADD PRIMARY KEY(empid);
+```
+
+check indexes
+```
+select * from pg_indexes where tablename='emp';
+```
+
+####Unique indexes
+A unique index is also used to maintain uniqueness; however, it allows NULL values. (multiple null do not consider duplicate)
+```
+CREATE TABLE emp(
+ empid integer UNIQUE,
+ empname varchar,
+ sal numeric);
+```
+or
+```
+CREATE TABLE emp(
+ empid integer,
+ empname varchar,
+ sal numeric,
+ UNIQUE(empid));
+```
+
+####B-tree indexes
+The B-tree index can be used by an optimizer whenever the indexed column is used with a comparison operator, such as <, <=, =, >=, >, and LIKE or the ~ operator; however, LIKE or ~ will only be used if the pattern is a constant and anchored to the beginning of the string, for example, my_col LIKE 'mystring%' or my_column ~ '^mystring', but not my_column LIKE '%mystring'.  
+
+
+
+####Full text indexes
+
+
+
+
+
+
+
+
+
+
 
 
 
