@@ -271,6 +271,53 @@ SELECT array_length(product,1) FROM supplier WHERE name='Supplier1';
 
 
 
+
+
+
+##Chapter 3. Triggers
+###Introduction to triggers
+operations:
+- A Data Manipulation Language (DML) statement—DELETE, INSERT, or UPDATE
+- A Data Definition Language (DDL) statement—CREATE, ALTER, or DROP
+- A database operation—SERVERERROR, LOGON, LOGOFF, STARTUP, or SHUTDOWN  
+
+
+There are two type of triggers
+- Row-level trigger: An event is triggered for each row updated, inserted, or deleted
+- Statement-level trigger: When a SQL statement emits an event, any triggers that are registered to listen for that event will be fired
+
+
+####Adding triggers to PostgreSQL
+Create the employee table and the emp_salary_history table:
+```
+CREATE TABLE employee  (emp_id int4, employee_name varchar(25), department_id int4, salary numeric(7,2));  
+CREATE TABLE emp_salary_history(emp_id int, employee_name varchar(25), salary numeric(7,2) ,changed_on timestamp(6)); 
+```
+
+```
+This is the hierarchy followed when a trigger is fired. The BEFORE statement's trigger fires first. Next, the BEFORE row-level trigger fires, once for each row affected. Then the AFTER row-level trigger fires, once for each affected row. These events will alternate between the BEFORE and AFTER row-level triggers. Finally, the AFTER statement-level trigger fires.
+```
+(tbc)
+
+
+##Chapter 4.  Understanding Database Design Concepts
+###Anomalies in DBMS
+These are the insertion, update, and deletion anomalies. 
+
+
+
+
+
+
+
+##Chapter 5. Transactions and Locking
+###Defining transactions
+####ACID rules
+
+
+
+
+
 ##Chapter 7.  Table Partitioning
 ###Table partitioning
 
@@ -347,6 +394,118 @@ For partitioned table, postgres only scanned the required child tables rather th
 
 
 ####Partitioning types
+#####List partition
+```
+CREATE TABLE customers_APAC (CHECK(countrycode IN ('USA','UK')))  INHERITS(customers);
+```
+#####Range partition
+parent table
+```
+CREATE TABLE LOGS(id INT, recorded_date DATE,logmsg TEXT);
+```
+child table
+```
+CREATE TABLE LOGS_2015JAN(CHECK(recorded_date>='2015-01-01' AND recorded_date<'2015-02-01')) INHERITS(LOGS);
+CREATE TABLE LOGS_2015FEB(CHECK(recorded_date>='2015-02-01' AND recorded_date<'2015-03-01')) INHERITS(LOGS);
+```
+
+In PostgreSQL, we only have list and range partitions.
+
+
+####Adding a new partition
+Dynamic trigger function code that automatically INSERT into child tables:
+```
+CREATE OR REPLACE FUNCTION  public.customers_before_insert_trig_func()
+RETURNS trigger AS
+$$
+BEGIN
+EXECUTE 'INSERT INTO customers_'||NEW.countrycode||' VALUES  ($1.*)' USING NEW;  -- Need to memorize
+RETURN NULL;      
+END
+$$
+LANGUAGE plpgsql;
+```
+Here we have a update of. [official doc](https://www.postgresql.org/docs/current/static/sql-createtrigger.html)
+```
+CREATE or REPLACE TRIGGER emp_history_trigger  
+BEFORE UPDATE OF salary  
+ON employee  
+FOR EACH ROW  
+EXECUTE PROCEDURE insert_into_salary_history();
+```
+
+
+####Purging an old partition
+remove customers_jap from customers:
+```
+ALTER TABLE customers_jap NO INHERIT customers;
+```
+[pg_partman](https://github.com/keithf4/pg_partman)
+
+
+####Alternate partitioning methods
+#####Method 1
+disable triggers:
+```
+ALTER TABLE customers DISABLE trigger  customers_ins_trig;
+```
+create rule. Insert into child table instead of insert into parent table
+```
+create rule customers_usa_rule as on 
+insert into customers WHERE countrycode = 'USA'
+DO INSTEAD INSERT INTO customers_usa VALUES(NEW.*);
+```
+
+
+#####Method 2
+union child tables
+```
+CREATE TABLE customers_usa(id int, name varchar(126),  countrycode varchar(3), contactnum text);
+CREATE TABLE customers_uk(id int, name varchar(126),  countrycode varchar(3), contactnum text);
+```
+union
+```
+CREATE VIEW v_customers AS SELECT * FROM customers_usaUNION ALL SELECT * FROM customers_uk; 
+```
+(tbc)
+
+
+####Constraint exclusion
+create simple table
+```
+CREATE TABLE testing(t CHAR(1) CHECK(t='A')); 
+INSERT INTO testing VALUES('A');
+```
+disable constraint_exclusion
+```
+SET CONSTRAINT_EXCLUSION TO OFF;
+```
+test this query with CONSTRAINT_EXCLUSION TO OFF/ON
+```
+EXPLAIN ANALYZE SELECT * FROM testing WHERE t='Z';
+```
+Enabling ```CONSTRAINT_EXCLUSION``` parameter will increase the planning time, but the actual execution time will be reduced if the given predicate doesn't match the constraints.
+
+
+
+#####PL/Proxy
+PL/Proxy works on a power of 2 number of partitions only. That is, we need to have 2^(N) number of partitions to configure PL/Proxy.  
+
+
+#####Foreign inheritance (9.5+)
+```
+CREATE DATABASE customers_usa;
+CREATE DATABASE customers_uk;
+```
+
+(tbc)
+
+
+
+
+
+
+
 
 
 ##Chapter 9. PostgreSQL Extensions and Large Object Support
