@@ -271,25 +271,82 @@ SELECT array_length(product,1) FROM supplier WHERE name='Supplier1';
 
 
 
-
 ##Chapter 7.  Table Partitioning
 ###Table partitioning
 
 
 ####Partition implementation
+Partitioning a table is nothing but creating a separate table called a child table for each partition. 
+
+parent table
+```
+CREATE TABLE IF NOT EXISTS customers (id int, name varchar(126),countrycode varchar(3),contactnum text);
+```
+create child tables
+```
+CREATE TABLE customers_USA(CHECK (countrycode='USA'))  INHERITS(customers);
+CREATE TABLE customers_UK(CHECK (countrycode='UK'))  INHERITS(customers);
+```
+show all child tables
+```
+\d+ customers
+```
+use inhrelid:regclass and inhparent::regclass
+```
+SELECT inhrelid::regclass, inhparent::regclass from  pg_inherits WHERE inhparent::regclass='customers'::regclass;
+```
+
+impl trigger function
+```
+Create or replace function customers_before_insert_trig_func() returns trigger as
+$$
+begin
+if (new.countrycode='USA') then
+insert into customers_USA values (new.*);
+elsif (new.countrycode='UK') then
+insert into customer_UK values (new.*);
+else
+raise exception 'error';
+end if
+return null;
+end;
+$$ language plpgsql;
+```
+create trigger
+
+```
+create trigger customers_ins_trig before insert on customers for each row execute procedure customers_before_insert_trig_func();
+```
+
+insert test:
+```
+WITH stuff AS
+(
+  SELECT array['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']  as names,   
+  array['USA', 'UK'] AS cnames)
+INSERT INTO customers
+SELECT Generate_series(1, 1000) id,
+names[(random()*100)::int%8+1] cname,
+cnames[(random()*100)::int%6+1] countrycode,
+ltrim(round(random()::numeric, 10)::text, '0.') contactnumber 
+FROM stuff;
+```
+(insert 0 0)
+
+
+We have 1000 records; however, our actual INSERT operation returned 0 inserted records. The reason behind this discrepancy is the TRIGGER function. Our trigger function diverts the incoming INSERT into its corresponding child table, and returns INSERT 0 0 as a result to the parent table.   
+
+
+We can explain anapyze querytot test unpartitioned table and partitioned table respectively.
+```
+EXPLAIN ANALYZE SELECT COUNT(*), countrycode FROM  customers WHERE countrycode IN ('USA', 'UK') GROUP BY countrycode;
+```
+For partitioned table, postgres only scanned the required child tables rather than scanning them all.
 
 
 
 
-
-
-
-
-
-
-
-
-
+####Partitioning types
 
 
 ##Chapter 9. PostgreSQL Extensions and Large Object Support
