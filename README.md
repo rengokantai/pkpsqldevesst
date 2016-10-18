@@ -171,6 +171,17 @@ Three types of Outer joins:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 ##Chapter 2. Data Manipulation
 ###Conversion between datatypes
 syntax
@@ -262,6 +273,23 @@ SELECT array_length(product,1) FROM supplier WHERE name='Supplier1';
 
 
 ####UNNESTing arrays to rows
+
+
+
+
+
+
+####Introduction to JSON
+
+
+
+
+
+
+
+
+
+
 
 
 
